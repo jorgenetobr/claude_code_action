@@ -50,6 +50,9 @@ export function FileSystemProvider({
     return fs;
   });
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  // `refreshTrigger` é um contador inteiro usado como sinalizador de mudança.
+  // O VirtualFileSystem é um objeto mutável que React não detecta como alterado;
+  // incrementar este contador força re-render dos consumidores do contexto.
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const triggerRefresh = useCallback(() => {
@@ -60,15 +63,13 @@ export function FileSystemProvider({
     if (!selectedFile) {
       const files = fileSystem.getAllFiles();
 
-      // Check if App.jsx exists
       if (files.has("/App.jsx")) {
         setSelectedFile("/App.jsx");
       } else {
-        // Find first file in root directory
         const rootFiles = Array.from(files.keys())
           .filter((path) => {
             const parts = path.split("/").filter(Boolean);
-            return parts.length === 1; // Root level file
+            return parts.length === 1; // apenas arquivos na raiz do VFS
           })
           .sort();
 
@@ -110,11 +111,11 @@ export function FileSystemProvider({
     (oldPath: string, newPath: string): boolean => {
       const success = fileSystem.rename(oldPath, newPath);
       if (success) {
-        // Update selected file if it was renamed
         if (selectedFile === oldPath) {
           setSelectedFile(newPath);
         } else if (selectedFile && selectedFile.startsWith(oldPath + "/")) {
-          // Update selected file if it's inside a renamed directory
+          // Arquivo selecionado estava dentro do diretório renomeado:
+          // preserva o caminho relativo sob o novo nome.
           const relativePath = selectedFile.substring(oldPath.length);
           setSelectedFile(newPath + relativePath);
         }
@@ -146,7 +147,6 @@ export function FileSystemProvider({
     (toolCall: ToolCall) => {
       const { toolName, args } = toolCall;
 
-      // Handle str_replace_editor tool
       if (toolName === "str_replace_editor" && args) {
         const { command, path, file_text, old_str, new_str, insert_line } = args;
 
@@ -186,7 +186,6 @@ export function FileSystemProvider({
         }
       }
 
-      // Handle file_manager tool
       if (toolName === "file_manager" && args) {
         const { command, path, new_path } = args;
 

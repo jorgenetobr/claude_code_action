@@ -20,12 +20,10 @@ export function PreviewFrame() {
       try {
         const files = getAllFiles();
 
-        // Clear error first when we have files
         if (files.size > 0 && error) {
           setError(null);
         }
 
-        // Find the entry point - look for App.jsx, App.tsx, index.jsx, or index.tsx
         let foundEntryPoint = entryPoint;
         const possibleEntries = [
           "/App.jsx",
@@ -42,7 +40,6 @@ export function PreviewFrame() {
             foundEntryPoint = found;
             setEntryPoint(found);
           } else if (files.size > 0) {
-            // Just use the first .jsx/.tsx file found
             const firstJSX = Array.from(files.keys()).find(
               (path) => path.endsWith(".jsx") || path.endsWith(".tsx")
             );
@@ -62,7 +59,6 @@ export function PreviewFrame() {
           return;
         }
 
-        // We have files, so it's no longer the first load
         if (isFirstLoad) {
           setIsFirstLoad(false);
         }
@@ -80,7 +76,8 @@ export function PreviewFrame() {
         if (iframeRef.current) {
           const iframe = iframeRef.current;
 
-          // Need both allow-scripts and allow-same-origin for blob URLs in import map
+          // `allow-same-origin` é obrigatório para que o browser resolva blob: URLs
+          // dentro do importmap; sem ele, os módulos gerados não são carregados.
           iframe.setAttribute(
             "sandbox",
             "allow-scripts allow-same-origin allow-forms"

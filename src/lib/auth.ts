@@ -16,7 +16,7 @@ export interface SessionPayload {
 }
 
 export async function createSession(userId: string, email: string) {
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 dias em ms
   const session: SessionPayload = { userId, email, expiresAt };
 
   const token = await new SignJWT({ ...session })

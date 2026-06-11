@@ -16,7 +16,6 @@ export async function signUp(
   password: string
 ): Promise<AuthResult> {
   try {
-    // Validate input
     if (!email || !password) {
       return { success: false, error: "Email and password are required" };
     }
@@ -28,7 +27,6 @@ export async function signUp(
       };
     }
 
-    // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -37,10 +35,8 @@ export async function signUp(
       return { success: false, error: "Email already registered" };
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         email,
@@ -48,7 +44,6 @@ export async function signUp(
       },
     });
 
-    // Create session
     await createSession(user.id, user.email);
 
     revalidatePath("/");
@@ -64,12 +59,10 @@ export async function signIn(
   password: string
 ): Promise<AuthResult> {
   try {
-    // Validate input
     if (!email || !password) {
       return { success: false, error: "Email and password are required" };
     }
 
-    // Find user
     const user = await prisma.user.findUnique({
       where: { email },
     });
@@ -78,14 +71,12 @@ export async function signIn(
       return { success: false, error: "Invalid credentials" };
     }
 
-    // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword) {
       return { success: false, error: "Invalid credentials" };
     }
 
-    // Create session
     await createSession(user.id, user.email);
 
     revalidatePath("/");

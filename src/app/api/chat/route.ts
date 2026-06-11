@@ -24,12 +24,10 @@ export async function POST(req: Request) {
     },
   });
 
-  // Reconstruct the VirtualFileSystem from serialized data
   const fileSystem = new VirtualFileSystem();
   fileSystem.deserializeFromNodes(files);
 
   const model = getLanguageModel();
-  // Use fewer steps for mock provider to prevent repetition
   const isMockProvider = !process.env.ANTHROPIC_API_KEY;
   const result = streamText({
     model,
@@ -44,19 +42,18 @@ export async function POST(req: Request) {
       file_manager: buildFileManagerTool(fileSystem),
     },
     onFinish: async ({ response }) => {
-      // Save to project if projectId is provided and user is authenticated
       if (projectId) {
         try {
-          // Check if user is authenticated
           const session = await getSession();
           if (!session) {
             console.error("User not authenticated, cannot save project");
             return;
           }
 
-          // Get the messages from the response
           const responseMessages = response.messages || [];
-          // Combine original messages with response messages
+          // O system message é injetado em memória a cada requisição (com prompt
+          // caching) e não deve ser persistido — filtramos para evitar duplicação
+          // no histórico salvo.
           const allMessages = appendResponseMessages({
             messages: [...messages.filter((m) => m.role !== "system")],
             responseMessages,

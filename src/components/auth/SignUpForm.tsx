@@ -29,7 +29,6 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
     const result = await signUp(email, password);
 
     if (result.success) {
-      // The redirect is handled by the hook
       onSuccess?.();
     } else {
       setError(result.error || "Failed to sign up");

@@ -23,7 +23,6 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
     const result = await signIn(email, password);
 
     if (result.success) {
-      // The redirect is handled by the hook
       onSuccess?.();
     } else {
       setError(result.error || "Failed to sign in");

@@ -42,7 +42,9 @@ export function transformJSX(
       cssImports.add(cssMatch[1]);
     }
 
-    // Remove CSS imports from code
+    // O Babel não consegue transformar `import './styles.css'` — remove antes
+    // de transpilar; o conteúdo dos arquivos CSS é coletado separadamente e
+    // injetado via <style> no HTML final.
     processedCode = processedCode.replace(cssImportRegex, '');
 
     let match;
@@ -90,6 +92,8 @@ export interface ImportMapResult {
 }
 
 export function createImportMap(files: Map<string, string>): ImportMapResult {
+  // React é pré-fixado porque o Babel com runtime "automatic" sempre emite
+  // imports de "react/jsx-runtime", que precisam ser resolvidos pelo importmap.
   const imports: Record<string, string> = {
     react: "https://esm.sh/react@19",
     "react-dom": "https://esm.sh/react-dom@19",
@@ -106,7 +110,9 @@ export function createImportMap(files: Map<string, string>): ImportMapResult {
   let collectedStyles = "";
   const errors: Array<{ path: string; error: string }> = [];
 
-  // First pass: transform all files and collect imports
+  // Primeira passagem: transforma todos os arquivos e coleta imports.
+  // Terceiros são adicionados diretamente ao importmap via esm.sh;
+  // imports locais são acumulados para resolução na segunda passagem.
   for (const [path, content] of files) {
     if (
       path.endsWith(".js") ||
@@ -156,21 +162,22 @@ export function createImportMap(files: Map<string, string>): ImportMapResult {
         });
       }
 
-      // Add to import map with absolute path
+      // Cada arquivo recebe múltiplas entradas no importmap para cobrir as
+      // variações que o modelo pode gerar: caminho absoluto ("/Foo.jsx"),
+      // sem barra inicial ("Foo.jsx"), alias @/ ("@/Foo.jsx", "@/Foo") e
+      // sem extensão. Sem isso, um import como `from "@/components/Foo"`
+      // não encontraria o blob URL correspondente a "/components/Foo.jsx".
       imports[path] = blobUrl;
 
-      // Also add without leading slash
       if (path.startsWith("/")) {
         imports[path.substring(1)] = blobUrl;
       }
 
-      // Add @/ alias support - maps @/ to root directory
       if (path.startsWith("/")) {
         imports["@" + path] = blobUrl;
         imports["@/" + path.substring(1)] = blobUrl;
       }
 
-      // Add entries without file extensions for all variations
       const pathWithoutExt = path.replace(/\.(jsx?|tsx?)$/, "");
       imports[pathWithoutExt] = blobUrl;
 
@@ -208,7 +215,9 @@ export function createImportMap(files: Map<string, string>): ImportMapResult {
     }
   }
 
-  // Second pass: create placeholder modules for missing imports
+  // Segunda passagem: imports locais que não foram encontrados recebem um
+  // módulo stub vazio. Isso evita erro de carregamento no iframe quando o
+  // modelo referencia um arquivo que ainda não foi criado.
   for (const importPath of allImports) {
     // Skip if it's a known module or already exists
     if (imports[importPath] || importPath.startsWith("react")) {

@@ -46,7 +46,6 @@ export function HeaderActions({ user, projectId }: HeaderActionsProps) {
   const [initialLoading, setInitialLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Load projects initially
   useEffect(() => {
     if (user && projectId) {
       getProjects()
@@ -56,7 +55,6 @@ export function HeaderActions({ user, projectId }: HeaderActionsProps) {
     }
   }, [user, projectId]);
 
-  // Refresh projects when popover opens
   useEffect(() => {
     if (user && projectsOpen) {
       getProjects().then(setProjects).catch(console.error);

@@ -33,7 +33,6 @@ function FileTreeNode({ node, level }: FileTreeNodeProps) {
   const children =
     node.type === "directory" && node.children
       ? Array.from(node.children.values()).sort((a, b) => {
-          // Directories first, then files
           if (a.type !== b.type) {
             return a.type === "directory" ? -1 : 1;
           }

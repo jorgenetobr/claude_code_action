@@ -1,6 +1,6 @@
 import { test, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
-import { MessageList } from "../MessageList";
+import { MessageList, EmptyState } from "../MessageList";
 import type { Message } from "ai";
 
 // Mock the MarkdownRenderer component
@@ -12,8 +12,13 @@ afterEach(() => {
   cleanup();
 });
 
-test("MessageList shows empty state when no messages", () => {
-  render(<MessageList messages={[]} />);
+test("MessageList retorna null quando não há mensagens", () => {
+  const { container } = render(<MessageList messages={[]} />);
+  expect(container.firstChild).toBeNull();
+});
+
+test("EmptyState exibe textos do estado vazio", () => {
+  render(<EmptyState />);
 
   expect(
     screen.getByText("Start a conversation to generate React components")

@@ -51,7 +51,6 @@ export function ChatProvider({
     },
   });
 
-  // Track anonymous work
   useEffect(() => {
     if (!projectId && messages.length > 0) {
       setHasAnonWork(messages, fileSystem.serialize());

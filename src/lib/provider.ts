@@ -58,7 +58,9 @@ export class MockLanguageModel implements LanguageModelV1 {
     messages: LanguageModelV1Message[],
     userPrompt: string
   ): AsyncGenerator<LanguageModelV1StreamPart> {
-    // Count tool messages to determine which step we're on
+    // Cada chamada de ferramenta gera uma mensagem role="tool" no histórico.
+    // A contagem dessas mensagens determina em qual etapa do fluxo estamos:
+    //   0 → criar App.jsx  |  1 → criar componente  |  2 → editar componente  |  3+ → resumo final
     const toolMessageCount = messages.filter((m) => m.role === "tool").length;
 
     // Determine component type from the original user prompt

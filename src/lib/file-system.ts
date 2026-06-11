@@ -21,15 +21,12 @@ export class VirtualFileSystem {
   }
 
   private normalizePath(path: string): string {
-    // Ensure path starts with /
     if (!path.startsWith("/")) {
       path = "/" + path;
     }
-    // Remove trailing slash except for root
     if (path !== "/" && path.endsWith("/")) {
       path = path.slice(0, -1);
     }
-    // Normalize multiple slashes
     path = path.replace(/\/+/g, "/");
     return path;
   }
@@ -57,12 +54,10 @@ export class VirtualFileSystem {
   createFile(path: string, content: string = ""): FileNode | null {
     const normalized = this.normalizePath(path);
 
-    // Check if file already exists
     if (this.files.has(normalized)) {
       return null;
     }
 
-    // Create parent directories if they don't exist
     const parts = normalized.split("/").filter(Boolean);
     let currentPath = "";
 
@@ -95,7 +90,6 @@ export class VirtualFileSystem {
   createDirectory(path: string): FileNode | null {
     const normalized = this.normalizePath(path);
 
-    // Check if directory already exists
     if (this.files.has(normalized)) {
       return null;
     }
@@ -155,7 +149,6 @@ export class VirtualFileSystem {
       return false;
     }
 
-    // If it's a directory, remove all children recursively
     if (file.type === "directory" && file.children) {
       for (const [_, child] of file.children) {
         this.deleteFile(child.path);
@@ -229,7 +222,8 @@ export class VirtualFileSystem {
     this.files.delete(normalizedOld);
     this.files.set(normalizedNew, sourceNode);
 
-    // If it's a directory, update all children paths recursively
+    // Renomear um diretório exige atualizar o caminho de todos os descendentes
+    // no map `this.files`, pois as chaves são caminhos absolutos.
     if (sourceNode.type === "directory" && sourceNode.children) {
       this.updateChildrenPaths(sourceNode);
     }
@@ -292,7 +286,9 @@ export class VirtualFileSystem {
     const result: Record<string, FileNode> = {};
 
     for (const [path, node] of this.files) {
-      // Create a shallow copy without the Map children to avoid serialization issues
+      // `children` é um Map, que não é serializável em JSON. Omite-o
+      // intencionalmente; a estrutura de diretórios é reconstruída pelos
+      // caminhos em `deserializeFromNodes`.
       if (node.type === "directory") {
         result[path] = {
           type: node.type,
@@ -464,7 +460,8 @@ export class VirtualFileSystem {
       ) || []
     ).length;
 
-    // Replace all occurrences
+    // split+join em vez de replace com regex evita precisar escapar
+    // caracteres especiais presentes no código-fonte (e.g. parênteses, chaves).
     const updatedContent = content.split(oldStr).join(newStr || "");
     this.updateFile(path, updatedContent);
 

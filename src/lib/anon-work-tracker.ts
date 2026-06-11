@@ -1,12 +1,11 @@
-// Simple utility to track if anonymous user has created work
 const STORAGE_KEY = "uigen_has_anon_work";
 const DATA_KEY = "uigen_anon_data";
 
 export function setHasAnonWork(messages: any[], fileSystemData: any) {
   if (typeof window === "undefined") return;
-  
-  // Only set if there's actual content
-  if (messages.length > 0 || Object.keys(fileSystemData).length > 1) { // > 1 because root "/" always exists
+
+  // > 1 porque o nó raiz "/" sempre existe no objeto serializado
+  if (messages.length > 0 || Object.keys(fileSystemData).length > 1) {
     sessionStorage.setItem(STORAGE_KEY, "true");
     sessionStorage.setItem(DATA_KEY, JSON.stringify({ messages, fileSystemData }));
   }
