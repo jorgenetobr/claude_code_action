@@ -68,6 +68,14 @@ export function CodeEditor() {
       onChange={handleEditorChange}
       onMount={handleEditorDidMount}
       theme="vs-dark"
+      loading={
+        <div className="h-full w-full flex items-center justify-center bg-gray-900">
+          <div className="text-center">
+            <div className="h-6 w-6 mx-auto mb-3 rounded-full border-2 border-gray-600 border-t-gray-300 animate-spin" />
+            <p className="text-sm text-gray-500">Loading editor...</p>
+          </div>
+        </div>
+      }
       options={{
         minimap: { enabled: false },
         fontSize: 14,
